@@ -1,9 +1,9 @@
-# Selectanfrage für den 6. Projectathon der MII: SMITH
-Datum: 25.11.21
+# Selectanfrage für den 6. Projectathon der MII: MIRACUM
+Datum: 30.11.21
 
-Autorin: [julia.palm@med.uni-jena.de](mailto:julia.palm@med.uni-jena.de).
+Autorin: [Nandhini.Santhanam@medma.uni-heidelberg.de](mailto:nandhini.santhanam@medma.uni-heidelberg.de).
 
-Dieses Project führt die Select-Anfrage für das SMITH Projekt im Rahmen des 6. Projectathons aus. Hier ist eine zentrale Analyse vorgesehen. Dafür erzeugt dieses Skript zwei Tabellen mit den für die Analyse benötigten Inhalten. Diese Tabellen sollen zentral zusammengeführt und an die datenauswertendende Stelle übergeben werden.
+Dieses Project führt die Select-Anfrage für das MIRACUM  Projekt im Rahmen des 6. Projectathons aus. Hier ist eine zentrale Analyse vorgesehen. Dafür erzeugt dieses Skript zwei Tabellen mit den für die Analyse benötigten Inhalten. Diese Tabellen sollen zentral zusammengeführt und an die datenauswertendende Stelle übergeben werden.
 
 Das Readme beschreibt zunächst die technischen Details der Verwendung. Darunter sind die verwendeten CodeSysteme/Ressourcen/Profile und der konzeptionelle Ablauf der Abfrage beschrieben.
 
@@ -16,23 +16,23 @@ Es gibt zwei Möglichkeiten diese R-Skripte auszuführen: Direkt in R oder in ei
 
 2. Auf diesem Rechner muss R (aber nicht notwendigerweise RStudio) als genutzte Laufzeitumgebung installiert sein.
 
-3. Die mitgelieferte Datei `./config.R.default` muss nach `./config.R` kopiert werden und lokal angepasst werden (FHIR-Endpunkt, ggf. Authentifizierung, SSL peer verification); Erklärungen dazu finden sich direkt in dieser Datei. Eine Authentifizierung mit Basic Authentication oder Bearer Token ist möglich. Dafür müssen in `config.R` die Variable `authentication` und die zugehörigen Zugangsdaten (`password`/`username` bzw. `token`) angepasst werden.
-Wenn die Abfrage auf einem Server laufen sollen, der sowohl konsentierte als auch nicht konsentierte Daten enthält, so kann durch setzen der Variable `filterConsent <- TRUE` dafür gesorgt werden, dass nur Daten von Patienten extrahiert werden, auf die eine Consent-Ressource mit einem `2.16.840.1.113883.3.1937.777.24.5.3.8` (*MDAT_wissenschaftlich_nutzen_EU_DSGVO_NIVEAU*) Code verweist.  
+3. Die mitgelieferte Datei `./config_default.yml` muss nach `./config.yml` kopiert werden und lokal angepasst werden (serverbase, ggf. Authentifizierung - Username and password); Erklärungen dazu finden sich direkt in dieser Datei. Eine Authentifizierung mit Basic Authentication. Dafür müssen in `config.yml` die Variable `authentication` und die zugehörigen Zugangsdaten (`password`/`username`) angepasst werden.
+  
 
 4. Wenn die App über `runSmith_select.bat` (unter Windows) gestartet soll, muss in dieser der Pfad zur Datei `Rscript.exe` geprüft und ggf. angepasst werden (z.B. `C:\Program Files\R\R-4.0.4\bin\Rscript.exe`).
 
 
 #### Start des Skripts
-Beim ersten Start des Skripts wird überprüft, ob die zur Ausführung notwendigen R-Pakete (`fhircrackr`, `data.table`) vorhanden sind. Ist dies nicht der Fall, werden diese Pakete nachinstalliert – dieser Prozess kann einige Zeit in Anspruch nehmen.
+Beim ersten Start des Skripts wird überprüft, ob die zur Ausführung notwendigen R-Pakete ("rprojroot","fhircrackr","config","dplyr","zoo","stringr","tidyr") vorhanden sind. Ist dies nicht der Fall, werden diese Pakete nachinstalliert – dieser Prozess kann einige Zeit in Anspruch nehmen.
 
 ##### Batch-Datei/Shell-Skript
-**Unter Windows**: Mit der Batch-Datei `runSmith_select.bat`.
+**Unter Windows**: Mit der Batch-Datei `runMIRACUM_select.bat`.
 Beim ersten Ausführen sollte diese ggf. als Administrator gestartet werden (über Eingabeaufforderung oder Rechtsklick), wenn die ggf. notwendigen Berechtigungen zum Nachinstallieren der R-Pakete sonst nicht vorhanden sind. Nach der ersten Installation reicht dann ein Doppelklick zum Starten.
 
-**Unter Linux**: Mit dem Shell-Skript `runSmith_selectr.sh`. Das Shell-Skript muss ausführbar sein und ggf. beim ersten Ausführen mittels `sudo` gestartet werden, wenn ein Nachinstallieren der R-Pakete außerhalb des User-Kontexts erforderlich ist.
+**Unter Linux**: Mit dem Shell-Skript `runMIRACUM_select.sh`. Das Shell-Skript muss ausführbar sein und ggf. beim ersten Ausführen mittels `sudo` gestartet werden, wenn ein Nachinstallieren der R-Pakete außerhalb des User-Kontexts erforderlich ist.
 
 #### R/RStudio
-Durch Öffnen des R-Projektes (`Projectathon6-smith2.Rproj`) mit anschließendem Ausführen der Datei `smith_select.R` innerhalb von R/RStudio. Auch hier werden beim ersten Ausführen ggf. notwendige R-Pakete nachinstalliert.
+Durch Öffnen des R-Projektes (`Projectathon6-miracum1.Rproj`) mit anschließendem Ausführen der Datei `miracum_select.R` innerhalb von R/RStudio. Auch hier werden beim ersten Ausführen ggf. notwendige R-Pakete nachinstalliert.
 
 
 ## Ausführung im Docker Container
@@ -65,28 +65,6 @@ Zum Stoppen des Containers `docker compose stop`. Um ihn erneut zu starten, `doc
 Erklärung:
 
 -  `-v "$(pwd)/config.R:/config.R""` bindet die lokal veränderte Variante des config-Files ein. Wenn dieses geändert wird, reicht es, den Container neu zu starten (`docker stop Projectathon6-smith2`, config.R ändern, dann `docker start Projectathon6-smith2`), ein erneutes `docker build` ist nicht nötig.
-
-
------------------------------------------------------------------------------------------------
-
-## Selbstsignierte Server-Zertifikate
-
-Falls der verwendete FHIR-Server ein selbst-signiertes Zertifikat für HTTPS verwendet, ist es notwendig das zugehörige Root-Zertifikat zu übergeben. R nutzt die Systemzertifikate des Betriebssystems hierfür.
-
-Wenn die Abfrage direkt (ohne Docker) ausgeführt wird muss sich das Root-Zertifikat in den systemweit vertrauenswürdigen Zertifikaten befinden. Dies ist Betriebssystemabhängig. Für die Ausführung im Docker-Container kann das Root-Zertifikat als Volume eingebunden werden.
-
-**Docker**
-Angenommen das Zertifikat liegt unter `./localca.pem` muss folgender zusätzlicher Parameter beim `docker run ...`-Befehl übergeben werden:
-`-v ./localca.pem:/usr/local/share/ca-certificates.crt`
-
-**Docker-Compose**
-Angenommen das Zertifikat liegt unter `./localca.pem` muss folgender Eintrag in der `docker-compose.yml` gemacht werden:
-```
-[...]
-  volumes:
-  - ./localca.pem:/usr/local/share/ca-certificates.crt
-[...]
-```
 
 Hintergrund:
 Das Image basiert auf Debian und führt bei jedem Start den Befehl `update-ca-certificates` aus, mit dem es die Zertifikate unter `/usr/local/share/ca-certificates` einliest und zu den Vertrauenswürdigen hinzufügt.
