@@ -5,6 +5,7 @@ source("install_R_packages.R")
 
 #create directories
 if(!dir.exists("Ergebnisse")){dir.create("Ergebnisse")}
+if(!dir.exists("Summary")){dir.create("Summary")}
 if(!dir.exists("errors")){dir.create("errors")}
 if(!dir.exists("Bundles")){dir.create("Bundles")}
 
@@ -495,8 +496,16 @@ df.cohort <- df.cohort[,c("patient_id","birthdate","gender","patient_zip"
                           ,"encounter_id","admission_date","icd","system"
                           ,"recorded_date","rank")]
 
-#df.cohort$rank[c(which(df.cohort$rank == 1))] <- "Hauptdiagnose"
-#df.cohort$rank[c(which(df.cohort$rank == 2))] <- "Nebendiagnose"
+
+df.cohort.agg <- df.cohort%>%
+          group_by(patient_id,encounter_id)%>%
+          summarise(birthdate = unique(birthdate)
+                    ,gender = unique(gender)
+                    ,patient_zip = unique(patient_zip)
+                    ,admission_date= unique(admission_date)
+                    ,icd = paste((icd), collapse = '/')
+                    ,recorded_date = paste((recorded_date), collapse = '/')
+                    ,rank = paste((rank), collapse = '/')) 
 
 if(exists("df.procedure.wide")){
   df.cohort <- left_join(df.cohort,subset(df.procedure.wide,select = -c(patient_id)),"encounter_id")
@@ -505,22 +514,62 @@ if(exists("df.procedure.wide")){
 if(exists("df.conditions.previous.wide")){
 df.cohort <- left_join(df.cohort,subset(df.conditions.previous.wide,select = -c(encounter_id)),"patient_id")
 }
-#################################################################################################
-
-###generate summary####
-#cohort summary
-
-#observation summary
-
-#medication summary
 
 
-
-###Export
+###Export actual data
 if(!dir.exists("Ergebnisse")){dir.create("Ergebnisse")}
 write.csv2(df.cohort, paste0("Ergebnisse/Kohorte.csv"))
 write.csv2(df.observation, paste0("Ergebnisse/Observations.csv"))
 write.csv2(df.medstatement, paste0("Ergebnisse/Medications.csv"))
+#################################################################################################
+
+###generate summary data and export####
+#cohort summary
+if(nrow(df.cohort)>0){
+  df.cohort.trunc <- df.cohort[,c(1:10)]
+  df.cohort.trunc$year_quarter <- as.yearqtr(df.cohort.trunc$admission_date, format = "%Y-%m-%d")
+  
+  df.cohort.trunc.summary <- df.cohort.trunc%>%
+    group_by(year_quarter)%>%
+    summarise_all(funs(sum(is.na(.))))
+  write.csv2(df.cohort.trunc.summary, paste0("Summary/Cohort_Summary.csv"))
+}
+
+#Procedure Summary
+if(nrow(df.procedure)>0){
+df.procedure.summary <- df.procedure%>%
+                    group_by(features)%>%
+                    summarise(count_encounters = length(unique(encounter_id)))
+write.csv2(df.procedure.summary, paste0("Summary/Procedure_Summary.csv"))
+}
+
+
+#Previous Condition Summary
+if(nrow(df.conditions.previous)>0){
+df.conditions.previous.summary <- df.conditions.previous%>%
+  group_by(features)%>%
+  summarise(count_encounters = length(unique(encounter_id)))
+write.csv2(df.conditions.previous.summary, paste0("Summary/Previous_Diagnosen_Summary.csv"))
+}
+
+
+#observation summary
+if(nrow(df.observation)>0){
+df.observation.summary <- df.observation%>%
+  group_by(loinc_code)%>%
+  summarise(count_encounters = length(unique(encounter_id)))
+write.csv2(df.observation.summary, paste0("Summary/Observation_Summary.csv"))
+}
+
+
+#medication summary
+if(nrow(df.medstatement)>0){
+df.med.summary <- df.medstatement%>%
+  group_by(code,display)%>%
+  summarise(count_encounters = length(unique(encounter_id)))
+write.csv2(df.med.summary, paste0("Summary/Medication_Summary.csv"))
+}
+
 
 
 

@@ -7,8 +7,6 @@ RUN mkdir -p /Bundles
 COPY config_default.yml config_default.yml
 COPY miracum_select.R miracum_select.R
 COPY install_R_packages.R install_R_packages.R
-
-
 RUN apt-get update -qq
 RUN apt-get install -yqq libxml2-dev libssl-dev curl
 RUN install2.r --error \

@@ -5,6 +5,7 @@ services:
     volumes:
       - ./errors:/errors
       - ./Bundles:/Bundles
+      - ./Summary:/Summary
       - ./Ergebnisse:/Ergebnisse
       - ./config.yml:/config.yml
 #      - ./localca.pem:/usr/local/share/ca-certificates/localca.crt
