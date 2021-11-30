@@ -14,7 +14,7 @@ if(!dir.exists("Bundles")){dir.create("Bundles")}
 if(file.exists("config.yml")){
 conf <- config::get(file = "config.yml")
 }else{
-  conf <- config::get(file = "config_deafult.yml")
+  conf <- config::get(file = "config_default.yml")
 }
 
 
