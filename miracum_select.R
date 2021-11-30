@@ -10,11 +10,10 @@ if(!dir.exists("Bundles")){dir.create("Bundles")}
 
 
 #read  config
-rootdir <- find_rstudio_root_file()
 if(file.exists("config.yml")){
-conf <- config::get(file = paste(rootdir,"/config.yml",sep=""))
+conf <- config::get(file = "config.yml")
 }else{
-  conf <- config::get(file = paste(rootdir,"/config_deafult.yml",sep=""))
+  conf <- config::get(file = "config_deafult.yml")
 }
 
 
@@ -131,7 +130,7 @@ df.encounters <- fhir_melt(df.encounters,
                            brackets =brackets, sep = sep, all_columns = TRUE,)
 df.encounters <- fhir_rm_indices(df.encounters, brackets = brackets )
 
-df.encounters <- na.locf(df.encounters)
+df.encounters <- zoo:::na.locf(df.encounters, na.rm = F)
 df.encounters$condition_id <-sub("Condition/", "", df.encounters$condition_id)
 df.encounters$patient_id <-sub("Patient/", "", df.encounters$patient_id)
 
@@ -154,9 +153,12 @@ df.conditions <- df.conditions[c(which(df.conditions$icd %in% icd_codes) )]
 
 ####################extract the procedure resources##################
 df.procedure <- enc_tables$proc
-df.procedure <- fhir_rm_indices(df.procedure, brackets = brackets )
-df.procedure$encounter_id <-sub("Encounter/", "", df.procedure$encounter_id)
-df.procedure$patient_id <-sub("Patient/", "", df.procedure$patient_id)
+if(nrow(df.procedure)>0){
+  df.procedure <- fhir_rm_indices(df.procedure, brackets = brackets )
+  df.procedure$encounter_id <-sub("Encounter/", "", df.procedure$encounter_id)
+  df.procedure$patient_id <-sub("Patient/", "", df.procedure$patient_id)
+
+
 
 #filter resources with needed ops code 
 ops_codes <- c("8-020.8|8-020.D|8-980|8-981|8-981.2|8-981.20|8-981.21|8-981.22|8-981.23|8-981.3|5-025|5-026|5-026.4|8-83B.8|8-84B.0|8-84B.2|8-84B.3|8-84B.4|8-84B.5|8-706|8-713.0|8-980|8-98F|8-98B")
@@ -202,7 +204,7 @@ df.procedure.wide <- pivot_wider(data = df.procedure.wide
 
 
 
-
+}
 #######################################################################################################################
 
 
@@ -238,6 +240,8 @@ observation_list  <- lapply(list, function(x){
 })
 
 
+  
+
 #bring observation results together, save and flatten
 observation_bundles <- fhircrackr:::fhir_bundle_list(unlist(observation_list, recursive = F))
 #fhir_save(bundles = observation_bundles, directory = "Bundles/observations")
@@ -261,10 +265,14 @@ observation <- fhir_table_description(resource = "Observation",
 obs_table <- fhir_crack(observation_bundles,design = fhir_design(obs = observation))
 df.observation <- obs_table$obs
 
-#process observations_raw resources
-df.observation <- fhir_rm_indices(df.observation, brackets = brackets )
-df.observation$encounter_id <-sub("Encounter/", "", df.observation$encounter_id)
-df.observation$patient_id <-sub("Patient/", "", df.observation$patient_id)  
+  #process observations_raw resources
+if(nrow(df.observation)>0){
+  df.observation <- fhir_rm_indices(df.observation, brackets = brackets )
+  df.observation$encounter_id <-sub("Encounter/", "", df.observation$encounter_id)
+  df.observation$patient_id <-sub("Patient/", "", df.observation$patient_id)  
+
+}
+
 #######################################################################################################################
 #extract medicationstatement resource for the required encounter ids and atc codes
 medstat_list  <- lapply(list, function(x){
@@ -281,6 +289,8 @@ medstat_list  <- lapply(list, function(x){
                                 password = conf$password)
   
 })
+
+
 medstat_bundles <- fhircrackr:::fhir_bundle_list(unlist(medstat_list, recursive = F))
 #fhir_save(bundles = observation_bundles, directory = "Bundles/observations")
 
@@ -299,11 +309,13 @@ medstat <- fhir_table_description(resource = "MedicationStatement",
 medstat_table <- fhir_crack(medstat_bundles,design = fhir_design(medstat = medstat))
 df.medstatement <- medstat_table$medstat
 
+if(nrow(df.medstatement)>0){
 #process Medication statement  resources
 df.medstatement <- fhir_rm_indices(df.medstatement, brackets = brackets )
 df.medstatement$encounter_id <-sub("Encounter/", "", df.medstatement$encounter_id)
 df.medstatement$patient_id <-sub("Patient/", "", df.medstatement$patient_id) 
 df.medstatement$medication_id <-sub("Medication/", "", df.medstatement$medication_id) 
+
 
 
 ###extract the actual medication using the IDs
@@ -368,6 +380,8 @@ df.medication <- fhir_rm_indices(df.medication, brackets = brackets )
 
 df.medstatement <- left_join(df.medstatement,df.medication,"medication_id") 
 
+}
+
 #######################################################################################################################
 #extract the diagnosis resource based on patient ids
 patient_ids <- unique(df.encounters$patient_id)
@@ -398,6 +412,7 @@ condition_list  <- lapply(list, function(x){
   
 })
 
+
 condition_bundles <- fhircrackr:::fhir_bundle_list(unlist(condition_list, recursive = F))
 fhir_save(bundles = observation_bundles, directory = "Bundles/conditions")
 
@@ -415,12 +430,15 @@ condition <- fhir_table_description(resource = "Condition",
 
 cond_table <- fhir_crack(condition_bundles,design = fhir_design(con = condition))
 df.conditions.previous <- cond_table$con
+
+if(nrow(df.conditions.previous)>0){
 #process observations_raw resources
 df.conditions.previous <- fhir_rm_indices(df.conditions.previous, brackets = brackets )
 df.conditions.previous$encounter_id <-sub("Encounter/", "", df.conditions.previous$encounter_id)
 df.conditions.previous$patient_id <-sub("Patient/", "", df.conditions.previous$patient_id) 
 df.conditions.previous <- df.conditions.previous[-c(which(df.conditions.previous$encounter_id %in% encouter_ids)),]
 
+if(nrow(df.conditions.previous)>0){
 
 df.conditions.previous$features <- ""
 
@@ -466,7 +484,9 @@ df.conditions.previous.wide <- pivot_wider(data = df.conditions.previous.wide
                                            ,names_from = features
                                            ,values_from = icd
                                            ,id_cols = c(encounter_id,patient_id))
+}
 
+}
 ####################################join all the resources ##################################################
 df.cohort <- left_join(df.conditions,df.encounters[,c("condition_id","admission_date","rank","discharge_reason")],"condition_id")
 df.cohort <- left_join(df.cohort,df.patients,"patient_id")
@@ -475,12 +495,16 @@ df.cohort <- df.cohort[,c("patient_id","birthdate","gender","patient_zip"
                           ,"encounter_id","admission_date","icd","system"
                           ,"recorded_date","rank")]
 
-df.cohort$rank[c(which(df.cohort$rank == 1))] <- "Hauptdiagnose"
-df.cohort$rank[c(which(df.cohort$rank == 2))] <- "Nebendiagnose"
+#df.cohort$rank[c(which(df.cohort$rank == 1))] <- "Hauptdiagnose"
+#df.cohort$rank[c(which(df.cohort$rank == 2))] <- "Nebendiagnose"
 
-df.cohort <- left_join(df.cohort,subset(df.procedure.wide,select = -c(patient_id)),"encounter_id")
+if(exists("df.procedure.wide")){
+  df.cohort <- left_join(df.cohort,subset(df.procedure.wide,select = -c(patient_id)),"encounter_id")
+}
+
+if(exists("df.conditions.previous.wide")){
 df.cohort <- left_join(df.cohort,subset(df.conditions.previous.wide,select = -c(encounter_id)),"patient_id")
-
+}
 #################################################################################################
 
 ###generate summary####
