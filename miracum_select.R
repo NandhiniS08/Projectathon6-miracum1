@@ -531,7 +531,7 @@ write.csv2(df.medstatement, paste0("Ergebnisse/Medications.csv"))
 #cohort summary
 if(nrow(df.cohort)>0){
   df.cohort.trunc <- df.cohort[,c(1:10)]
-  df.cohort.trunc$year_quarter <- as.yearqtr(df.cohort.trunc$admission_date, format = "%Y-%m-%d")
+  df.cohort.trunc$year_quarter <- zoo:::as.yearqtr(df.cohort.trunc$admission_date, format = "%Y-%m-%d")
   
   df.cohort.trunc.summary <- df.cohort.trunc%>%
     group_by(year_quarter)%>%
