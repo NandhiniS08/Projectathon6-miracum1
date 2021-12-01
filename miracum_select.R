@@ -31,12 +31,12 @@ encounter_request <- fhir_url(url = conf$serverbase,
                                              "_include" = "Encounter:patient",
                                              "_revinclude"="Condition:encounter",
                                              "_revinclude"="Procedure:encounter",
-                                             "_parameter_count" = "500"
+                                             "_parameter_count" = "500"     # To speed up the download process
                               ))
 #"_profile" = "https://www.medizininformatik-initiative.de/fhir/core/modul-labor/StructureDefinition/ObservationLab"))
 
 #download the bundles
-enc_bundles <-fhir_search(request = encounter_request, username = conf$user, password = conf$password, verbose = 1,log_errors = 'errors.txt',)
+enc_bundles <-fhir_search(request = encounter_request, username = conf$user, password = conf$password, verbose = 1,log_errors = "errors/encounter_error.xml")
 #fhir_save(bundles = enc_bundles, directory = "Bundles/Encounters")
 
 
@@ -158,53 +158,53 @@ if(nrow(df.procedure)>0){
   df.procedure <- fhir_rm_indices(df.procedure, brackets = brackets )
   df.procedure$encounter_id <-sub("Encounter/", "", df.procedure$encounter_id)
   df.procedure$patient_id <-sub("Patient/", "", df.procedure$patient_id)
-
-
-
-#filter resources with needed ops code 
-ops_codes <- c("8-020.8|8-020.D|8-980|8-981|8-981.2|8-981.20|8-981.21|8-981.22|8-981.23|8-981.3|5-025|5-026|5-026.4|8-83B.8|8-84B.0|8-84B.2|8-84B.3|8-84B.4|8-84B.5|8-706|8-713.0|8-980|8-98F|8-98B")
-df.procedure <- df.procedure %>% filter(str_detect(ops, ops_codes))
-
-#features
-df.procedure$features <- ""
-
-#intravenouslyse therapy 
-df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-020.8"))))] <- "IVT"
-df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-020.D"))))] <- "IVT"
-
-#Admission to ICU
-df.procedure$features[c(which(startsWith(df.procedure$ops,"8-980")))] <- "Admission to ICU"
-df.procedure$features[c(which(startsWith(df.procedure$ops,"8-98F")))] <- "Admission to ICU"
-
-#Admission to stroke unit
-df.procedure$features[c(which(startsWith(df.procedure$ops,"8-981")))] <- "Admission to stroke unit"
-
-#Neurosurgery
-df.procedure$features[c(which(startsWith(df.procedure$ops,c("5-025"))))] <- "Neurosurgery"
-df.procedure$features[c(which(startsWith(df.procedure$ops,c("5-026"))))] <- "Neurosurgery"
-
-
-#Thrombectomy
-df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-83B.8"))))] <- "Thrombectomy"
-
-#Intrakraniell Stent
-df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-84B"))))] <- "Intrakraniell Stent"
-
-#ventilation
-df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-706"))))] <- "Mechanical Ventilation"
-df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-713"))))] <- "Mechanical Ventilation"
-
-df.procedure.wide <- df.procedure%>%
-  group_by(patient_id,encounter_id,features)%>%
-  summarise(ops = paste((ops), collapse = ','))
-
-df.procedure.wide <- pivot_wider(data = df.procedure.wide
-                                 ,names_from = features
-                                 ,values_from = ops
-                                 ,id_cols = c(encounter_id,patient_id))
-
-
-
+  
+  
+  
+  #filter resources with needed ops code 
+  ops_codes <- c("8-020.8|8-020.D|8-980|8-981|8-981.2|8-981.20|8-981.21|8-981.22|8-981.23|8-981.3|5-025|5-026|5-026.4|8-83B.8|8-84B.0|8-84B.2|8-84B.3|8-84B.4|8-84B.5|8-706|8-713.0|8-980|8-98F|8-98B")
+  df.procedure <- df.procedure %>% filter(str_detect(ops, ops_codes))
+  
+  #features
+  df.procedure$features <- ""
+  
+  #intravenouslyse therapy 
+  df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-020.8"))))] <- "IVT"
+  df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-020.D"))))] <- "IVT"
+  
+  #Admission to ICU
+  df.procedure$features[c(which(startsWith(df.procedure$ops,"8-980")))] <- "Admission to ICU"
+  df.procedure$features[c(which(startsWith(df.procedure$ops,"8-98F")))] <- "Admission to ICU"
+  
+  #Admission to stroke unit
+  df.procedure$features[c(which(startsWith(df.procedure$ops,"8-981")))] <- "Admission to stroke unit"
+  
+  #Neurosurgery
+  df.procedure$features[c(which(startsWith(df.procedure$ops,c("5-025"))))] <- "Neurosurgery"
+  df.procedure$features[c(which(startsWith(df.procedure$ops,c("5-026"))))] <- "Neurosurgery"
+  
+  
+  #Thrombectomy
+  df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-83B.8"))))] <- "Thrombectomy"
+  
+  #Intrakraniell Stent
+  df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-84B"))))] <- "Intrakraniell Stent"
+  
+  #ventilation
+  df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-706"))))] <- "Mechanical Ventilation"
+  df.procedure$features[c(which(startsWith(df.procedure$ops,c("8-713"))))] <- "Mechanical Ventilation"
+  
+  df.procedure.wide <- df.procedure%>%
+    group_by(patient_id,encounter_id,features)%>%
+    summarise(ops = paste((ops), collapse = ','))
+  
+  df.procedure.wide <- pivot_wider(data = df.procedure.wide
+                                   ,names_from = features
+                                   ,values_from = ops
+                                   ,id_cols = c(encounter_id,patient_id))
+  
+  
+  
 }
 #######################################################################################################################
 
@@ -236,7 +236,8 @@ observation_list  <- lapply(list, function(x){
   
   obs_bundles <- fhir_search(obs_request,
                              username = conf$username,
-                             password = conf$password)
+                             password = conf$password,
+                             log_errors =   "errors/Observations_error.xml")
   
 })
 
@@ -287,7 +288,8 @@ medstat_list  <- lapply(list, function(x){
   
   medstat_bundle <- fhir_search(medstat_Request,
                                 username = conf$username,
-                                password = conf$password)
+                                password = conf$password,
+                                log_errors = "errors/MedicationStatement_error.xml")
   
 })
 
@@ -346,7 +348,8 @@ medication_list  <- lapply(list, function(x){
   
   med_bundle <- fhir_search(med_request,
                             username = conf$username,
-                            password = conf$password)
+                            password = conf$password,
+                            log_errors = "errors/medication_error.xml")
   
 })
 
@@ -409,7 +412,8 @@ condition_list  <- lapply(list, function(x){
   
   cond_bundles <- fhir_search(cond_request,
                               username = conf$username,
-                              password = conf$password)
+                              password = conf$password,
+                              log_errors = "errors/diagnosis_error.xml")
   
 })
 
@@ -531,7 +535,7 @@ if(nrow(df.cohort)>0){
   
   df.cohort.trunc.summary <- df.cohort.trunc%>%
     group_by(year_quarter)%>%
-    summarise_all(funs(sum(is.na(.))))
+    summarise_all(funs(sum(!is.na(.))))
   write.csv2(df.cohort.trunc.summary, paste0("Summary/Cohort_Summary.csv"))
 }
 
