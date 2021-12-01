@@ -27,7 +27,7 @@ sep = " || "
 encounter_request <- fhir_url(url = conf$serverbase, 
                               resource = "Encounter", 
                               parameters = c("date" = "ge2015-01-01",
-                                             "_has:Condition:encounter:code"="I60.0,I60.1,I60.2,I60.3,I60.4,I60.5,I60.6,I60.7,I60.8,I60.9,I61.0,I61.1,I61.2,  I61.3,I61.4,I61.5,I61.6,I61.8,I61.9,I63.0,I63.1,I63.2,I63.3,I63.4,I63.5,I63.6,I63.8,I63.9,I67.80!",
+                                             "_has:Condition:encounter:code"="I60.0,I60.1,I60.2,I60.3,I60.4,I60.5,I60.6,I60.7,I60.8,I60.9,I61.0,I61.1,I61.2,I61.3,I61.4,I61.5,I61.6,I61.8,I61.9,I63.0,I63.1,I63.2,I63.3,I63.4,I63.5,I63.6,I63.8,I63.9,I67.80!",
                                              "_include" = "Encounter:patient",
                                              "_revinclude"="Condition:encounter",
                                              "_revinclude"="Procedure:encounter",
@@ -272,6 +272,8 @@ if(nrow(df.observation)>0){
   df.observation <- fhir_rm_indices(df.observation, brackets = brackets )
   df.observation$encounter_id <-sub("Encounter/", "", df.observation$encounter_id)
   df.observation$patient_id <-sub("Patient/", "", df.observation$patient_id)  
+  
+  #df.observation.wide <- pivot_wider()
 
 }
 
@@ -324,53 +326,27 @@ df.medstatement$medication_id <-sub("Medication/", "", df.medstatement$medicatio
 ###extract the actual medication using the IDs
 medication_ids <- unique(df.medstatement$medication_id)
 
-nchar_for_ids <- 1800 - nchar(conf$serverbase)
-n <- length(medication_ids)
-list <- split(medication_ids, ceiling(seq_along(medication_ids)/n)) 
-nchar <- sapply(list, function(x){sum(nchar(x))+(length(x)-1)}) 
 
-#reduce the chunk size until number of characters is small enough
-while(any(nchar > nchar_for_ids)){
-  n <- n/2
-  list <- split(medication_ids, ceiling(seq_along(medication_ids)/n))
-  nchar <- sapply(list, function(x){sum(nchar(x))+(length(x)-1)})
-}
+med_request <- fhir_url(url = conf$serverbase,
+                        resource = "Medication",
+                        parameters = c("_id" = unique(df.medstatement$medication_id)
+                        ))
 
-
-medication_list  <- lapply(list, function(x){
-  
-  ids <- paste(x, collapse = ",")
-  
-  med_request <- fhir_url(url = conf$serverbase,
-                          resource = "Medication",
-                          parameters = c("_id" = ids
-                          ))
-  
-  med_bundle <- fhir_search(med_request,
-                            username = conf$username,
-                            password = conf$password,
-                            log_errors = "errors/medication_error.xml")
-  
-})
-
+med_bundle <- fhir_search(med_request,
+                          username = conf$username,
+                          password = conf$password,
+                          log_errors = "errors/medication_error.xml")
 medication <- fhir_table_description(resource = "Medication",
                                      cols = c(medication_id = "id",
                                               code = "code/coding/code",
-                                              system = "code/coding/system",
-                                              display = "code/coding/display"),
+                                              system = "code/coding/system"
+                                              #,display = "code/coding/display"
+                                              ),
                                      style = fhir_style(sep=sep,
                                                         brackets = brackets,
                                                         rm_empty_cols = FALSE)
 )
-
-if(length(medication_list)>1)
-{
-  med_bundles <- fhircrackr:::fhir_bundle_list(unlist(medication_list))
-  med_table <- fhir_crack(med_bundles,design = fhir_design(med = medication))
-}else{
-  med_table <- fhir_crack(medication_list[[1]],design = fhir_design(med = medication))
-}
-
+med_table <- fhir_crack(med_bundle,design = fhir_design(med = medication))
 
 
 
@@ -378,11 +354,13 @@ if(length(medication_list)>1)
 
 
 df.medication <- med_table$med
-
-#process Medication statement  resources
-df.medication <- fhir_rm_indices(df.medication, brackets = brackets )
-
-df.medstatement <- left_join(df.medstatement,df.medication,"medication_id") 
+if(nrow(df.medication >0 )){
+  
+  #process Medication statement  resources
+  df.medication <- fhir_rm_indices(df.medication, brackets = brackets )
+  df.medstatement <- left_join(df.medstatement,df.medication,"medication_id")
+}
+ 
 
 }
 
@@ -530,13 +508,18 @@ write.csv2(df.medstatement, paste0("Ergebnisse/Medications.csv"))
 ###generate summary data and export####
 #cohort summary
 if(nrow(df.cohort)>0){
-  df.cohort.trunc <- df.cohort[,c(1:10)]
-  df.cohort.trunc$year_quarter <- zoo:::as.yearqtr(df.cohort.trunc$admission_date, format = "%Y-%m-%d")
-  
+  df.cohort.trunc <- df.cohort.agg
+  df.cohort.trunc$year_quarter <-  ifelse(!is.na(df.cohort.trunc$admission_date),as.character(zoo:::as.yearqtr(df.cohort.trunc$admission_date, format = "%Y-%m-%d")),as.character(zoo:::as.yearqtr(df.cohort.trunc$recorded_date, format = "%Y-%m-%d")))
+  df.cohort.trunc[df.cohort.trunc=="NA"] = NA
   df.cohort.trunc.summary <- df.cohort.trunc%>%
     group_by(year_quarter)%>%
     summarise_all(funs(sum(!is.na(.))))
   write.csv2(df.cohort.trunc.summary, paste0("Summary/Cohort_Summary.csv"))
+  
+  df.conditions.summary <- df.conditions%>%
+    group_by(icd)%>%
+    summarise(count_encounters = length(unique(encounter_id)))
+  write.csv2(df.conditions.summary, paste0("Summary/StrokeDiagnosis_Summary.csv"))
 }
 
 #Procedure Summary
@@ -553,7 +536,9 @@ if(nrow(df.conditions.previous)>0){
 df.conditions.previous.summary <- df.conditions.previous%>%
   group_by(features)%>%
   summarise(count_encounters = length(unique(encounter_id)))
-write.csv2(df.conditions.previous.summary, paste0("Summary/Previous_Diagnosen_Summary.csv"))
+write.csv2(df.conditions.previous.summary, paste0("Summary/history_comorbidities_Summary.csv"))
+
+
 }
 
 
@@ -569,7 +554,7 @@ write.csv2(df.observation.summary, paste0("Summary/Observation_Summary.csv"))
 #medication summary
 if(nrow(df.medstatement)>0){
 df.med.summary <- df.medstatement%>%
-  group_by(code,display)%>%
+  group_by(code)%>%
   summarise(count_encounters = length(unique(encounter_id)))
 write.csv2(df.med.summary, paste0("Summary/Medication_Summary.csv"))
 }
