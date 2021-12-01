@@ -83,6 +83,3 @@ Analog dazu befinden sich in der zweiten Gruppe die zusammengefasste/aggregierte
 - `Observation_Summary.csv` Anzahl der Fälle gruppierte entsprechend der verfügbaren Laborwerte
 
 Diese sind benötigt um die möglichste größte und feature-reicshte homogene Kohrote über alle Standorten hinweg für die statistische Auswertung selektieren zu können. 
-
-
-Diese Tabelle enthält eine Kombination von Informationen aus der Patient Ressource, der Encounter Ressource und der Observation Ressource. Sie enthält alle Fälle, für die es eine Observation mit einer NTproBNP Messung im geforderten Zeitraum gibt.
