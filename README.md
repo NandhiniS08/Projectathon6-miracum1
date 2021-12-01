@@ -1,9 +1,9 @@
-# Selectanfrage für den 6. Projectathon der MII: MIRACUM
+# Selectanfrage für den 6. Projectathon der MII: MIRACUM "WE-STORM"
 Datum: 30.11.21
 
 Autorin: [Nandhini.Santhanam@medma.uni-heidelberg.de](mailto:nandhini.santhanam@medma.uni-heidelberg.de).
 
-Dieses Project führt die Select-Anfrage für das MIRACUM  Projekt im Rahmen des 6. Projectathons aus. Hier ist eine zentrale Analyse vorgesehen. Dafür erzeugt dieses Skript zwei Tabellen mit den für die Analyse benötigten Inhalten. Diese Tabellen sollen zentral zusammengeführt und an die datenauswertendende Stelle übergeben werden.
+Dieses Project führt die Select-Anfrage für das MIRACUM ("WE-STORM") Projekt im Rahmen des 6. Projectathons aus. Hier ist eine dezentrale Analyse (distributed On-Site and Federated Learning)vorgesehen. Dieses Skript (Step 1) erzeugt mehreren Tabellen mit aggregierten Daten, die für die Planung der statistischen Analysen (Step 2) benötigt werden. Diese Tabellen sollen zuerst zentral evaluiert werden und somit an die datenauswertendende Stelle (MIRACUM, Mannheim) übergeben werden.
 
 Das Readme beschreibt zunächst die technischen Details der Verwendung. Darunter sind die verwendeten CodeSysteme/Ressourcen/Profile und der konzeptionelle Ablauf der Abfrage beschrieben.
 
@@ -30,23 +30,24 @@ Beim ersten Start des Skripts wird überprüft, ob die zur Ausführung notwendig
 Beim ersten Ausführen sollte diese ggf. als Administrator gestartet werden (über Eingabeaufforderung oder Rechtsklick), wenn die ggf. notwendigen Berechtigungen zum Nachinstallieren der R-Pakete sonst nicht vorhanden sind. Nach der ersten Installation reicht dann ein Doppelklick zum Starten.
 
 **Unter Linux**: Mit dem Shell-Skript `runMIRACUM_select.sh`. Das Shell-Skript muss ausführbar sein und ggf. beim ersten Ausführen mittels `sudo` gestartet werden, wenn ein Nachinstallieren der R-Pakete außerhalb des User-Kontexts erforderlich ist.
+_Debugging/Error:_ Im Falle eines Berechtigungsfehlers soll der folgende Befehl vor dem ausführen des o.b. Shell-Skripts noch zusätzlich ausgeführt werden: `chmod -R 777 ./` 
 
 #### R/RStudio
 Durch Öffnen des R-Projektes (`Projectathon6-miracum1.Rproj`) mit anschließendem Ausführen der Datei `miracum_select.R` innerhalb von R/RStudio. Auch hier werden beim ersten Ausführen ggf. notwendige R-Pakete nachinstalliert.
 
-
 ## Ausführung im Docker Container
-Um die Abfrage in einem Docker Container laufen zu lassen gibt es drei Möglichkeiten:
+Um die Abfrage in einem Docker Container laufen zu lassen gibt es zwei Möglichkeiten:
 
+<!--- 
+DockerHub option will be updated
 **A) Image von DockerHub ziehen:**
 1. Git-Respository klonen: `git clone https://github.com/NandhiniS08/Projectathon6-miracum1.git`
 2. Verzeichniswechsel in das lokale Repository: `cd Projectathon6-miracum1`
 3. Konfiguration lokal anpassen: `./config_default.yml` nach `./config.yml` kopieren und anpassen 
 4. Image downloaden und Container starten: `docker run --name projectathon6-miracum1 -v "$(pwd)/errors:/errors" -v "$(pwd)/Bundles:/Bundles" -v "$(pwd)/Summary:/Summary" -v "$(pwd)/Ergebnisse:/Ergebnisse" -v "$(pwd)/config.yml:/config.yml" NandhiniS08/projectathon6-miracum1`
+--->
 
-
-**B) Image bauen mit Docker Compose:**
-
+**A) Image bauen mit Docker Compose:**
 1. Git-Respository klonen: `git clone https://github.com/NandhiniS08/Projectathon6-miracum1.git`
 2. Verzeichniswechsel in das lokale Repository: `cd Projectathon6-miracum1`
 3. Konfiguration lokal anpassen: `./config_default.yml` nach `./config.yml` kopieren und anpassen
@@ -54,8 +55,7 @@ Um die Abfrage in einem Docker Container laufen zu lassen gibt es drei Möglichk
 
 Zum Stoppen des Containers `docker compose stop`. Um ihn erneut zu starten, `docker compose start`.
 
-**C) Image bauen ohne Docker Compose**
-
+**B) Image bauen ohne Docker Compose**
 1. Git-Respository klonen: `git clone https://github.com/NandhiniS08/Projectathon6-miracum1.git`
 2. Verzeichniswechsel in das lokale Repository: `cd Projectathon6-miracum1`
 3. Image bauen: `docker build -t projectathon6-miracum1 .` 
@@ -64,5 +64,25 @@ Zum Stoppen des Containers `docker compose stop`. Um ihn erneut zu starten, `doc
 
 Erklärung:
 
--  `-v "$(pwd)/config.yml:/config.yml""` bindet die lokal veränderte Variante des config-Files ein. Wenn dieses geändert wird, reicht es, den Container neu zu starten (`docker stop Projectathon6-miracum1`, config.yml ändern, dann `docker start Projectathon6-miracum1`), ein erneutes `docker build` ist nicht nötig.
+-  `-v "$(pwd)/config.yml:/config.yml""` bindet die lokal veränderte Variante des config-Files ein. Wenn dieses geändert wird, reicht es, den Container neu zu stoppen und starten (`docker stop Projectathon6-miracum1`, `config.yml` ändern, dann `docker start Projectathon6-miracum1`), ein erneutes `docker build` ist nicht nötig.
 
+
+## Output 
+Das Skript erzeugt mehrere Ordner im Projekt-Directory. Um für den Projectathon eine möglichst einfache übersichtliche Lösung zu bekommen, werden alle files, die darin erzeugt werden bei mehrmaligem Ausführen ggf. einfach überschrieben.
+
+### Ergebnisse
+Wenn die Abfrage erfolgreich durchgeführt wurde, sind hier zwei Gruppen von csv-Dateien zu finden.
+In der ersten Gruppe befinden sich 3 `.csv` Dateien mit den orignalen Quelldaten:
+- `Kohorte.csv` inkl. alle Patienten mit den Pflichtdatenfelder(patient_id, birth_date, gender, patient_zip)
+- `Medication.csv` inkl. alle Resourcen bzgl. Patientenaufnahmen (encouter_id) und die erhaltene Medikation (code)
+- `Observations.csv` inkl. patient_id und encounter_id sowie LOINC-Codes (value & unit)
+
+Analog dazu befinden sich in der zweiten Gruppe die zusammengefasste/aggregierte Count-Daten der obigen Tabellen: 
+- `Cohort_Summary.csv` gruppiert für die Quartale (z.B. 2020/Q1, ...)
+- `Medication_Summary.csv` Anzahl der Fälle gruppierte nach Medikationstyp  
+- `Observation_Summary.csv` Anzahl der Fälle gruppierte entsprechend der verfügbaren Laborwerte
+
+Diese sind benötigt um die möglichste größte und feature-reicshte homogene Kohrote über alle Standorten hinweg für die statistische Auswertung selektieren zu können. 
+
+
+Diese Tabelle enthält eine Kombination von Informationen aus der Patient Ressource, der Encounter Ressource und der Observation Ressource. Sie enthält alle Fälle, für die es eine Observation mit einer NTproBNP Messung im geforderten Zeitraum gibt.
