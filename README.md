@@ -126,5 +126,94 @@ Extrahierte Elemente:
 * Encounter.diagnosis.condition.reference
 * Encounter.diagnosis.rank
 * Encounter.hospitalization.dischargeDisposition.coding.code
+### Modul Diagnose: Condition
+Profil: https://www.medizininformatik-initiative.de/fhir/core/modul-diagnose/StructureDefinition/Diagnose
+
+Version: 2.0.0-alpha3 bzw. 1.0.4
+
+Für Servabfrage verwendete Elemente:
+
+* Condition.subject.reference
+
+Extrahierte Elemente:
+
+* Condition.id
+* Condition.recordedDate
+* Condition.code.coding.code
+* Condition.code.coding.system
+* Condition.encounter.reference
+* Condition.subject.reference
+
+### Modul Prozedur: Procedure
+Profil: https://www.medizininformatik-initiative.de/fhir/core/modul-prozedur/StructureDefinition/Procedure
+
+Version: 2.0.0-alpha3 bzw. 1.0.4
+
+Für Servabfrage verwendete Elemente:
+
+* Procedure.subject.reference
+
+Extrahierte Elemente:
+
+* Procedure.id
+* Procedure.performedDateTime
+* Procedure.code.coding.code
+* Procedure.code.coding.system
+* Procedure.encounter.reference
+* Procedure.subject.reference
+
+
+### Modul Labor: Observation
+Profil: https://www.medizininformatik-initiative.de/fhir/core/modul-labor/StructureDefinition/ObservationLab
+
+Version: 1.0.6
+
+Extrahierte Elemente:
+
+* Observation.id
+* Observation.effectiveDateTime
+* Observation.code.coding.code
+* Observation.code.coding.system
+* Observation.subject.reference
+* Observation.valueQuantity.value
+* Observation.valueQuantity.unit
+* Observation.subject.reference
+* Observation.encounter.reference
+
+
+### Modul Medikation and MedicationStatement
+Profil: https://www.medizininformatik-initiative.de/fhir/core/modul-medikation/StructureDefinition/MedicationStatement
+Version: 1.0.6
+
+Extrahierte Elemente:
+* MedicationStatement.medication
+* Medication.code.coding.code
+* Medication.code.coding.system
+
+
+## Konzeptioneller Ablauf der Abfrage
+In principle, the script proceeds as follows:
+1. It connects to the FHIR server to download all encounter resources who has the below mentioned stroke diagnosis from the period of 2016-01-01 to current date.
+   ICD10: I60.0,I60.1,I60.2,I60.3,I60.4,I60.5,I60.6,I60.7,I60.8,I60.9,I61.0,I61.1,I61.2,I61.3,I61.4,I61.5,I61.6,I61.8,I61.9,
+          I63.0,I63.1,I63.2,I63.3,I63.4,I63.5,I63.6,I63.8,I63.9,I67.80!
+2. It also downloads all the referenced Patient, condition and procedure resources by the obtained encounter resources. i.e. it downloads all the patient,condition and procedures where the encounters obtained in step is also downloaded.
+ Request:   [base]/Encounter?date=ge2015-01-01&_has:Condition:encounter:code=I60.0,I60.1,I60.2,I60.3,I60.4,I60.5,I60.6,I60.7,I60.8,I60.9,I61.0,I61.1,I61.2,I61.3,I61.4,I61.5,I61.6,I61.8,I61.9,I63.0,I63.1,I63.2,I63.3,I63.4,I63.5,I63.6,I63.8,I63.9,I67.80!&_include=Encounter:patient&_revinclude=Condition:encounter&_revinclude=Procedure:encounter&_parameter_count=500
+ 3. After these resources are downloaded, necessary processing is done using FHIRCrackR package and converted into dataframe with relevant features for the encounters with relevant diagnosis.
+ 4. The list of encounter and patient ids are extracted from the extracted resources and this is used for downloading further resources such as observation and medication.
+ 5. The observation resource is downloaded for the list of encounter ids and LOINC code taht are listed below
+      777-3,6301-6,3173-2,2160-0,2089-1,2085-9,7799-0,4548-4,2345-7,2093-3,74201-5
+      Request: [base]Observation?encounter=xx&code=777-3,6301-6,3173-2,2160-0,2089-1,2085-9,7799-0,4548-4,2345-7,2093-3,74201-5
+      xx indicates list of encounter ids
+ 6. The medicationStatement resources are downloaded for the list of encounters from which the relevant medication id is obtained, which is then used to extract the actual medication resources
+       Request: [Base]/Medication?id=xx 
+        xx indicates list of medication ids
+ 8.  Inorder to obtain the past comorbidities related to cardiovasular risk and metabollic risks, condition resource is extracted for the list of patient and relevant features are created based on the ICD10 codes.
+    Request: [Base]/Condition?subject=xx  
+    xx indicates list of patient ids
+ 9.  Once all these resources are downloaded, various dataframes are created in R for the whole data and also different summaries that arre saved as csv. The details about the same are mentioned in the output section above 
+         
+
+
+
 
 
