@@ -77,7 +77,7 @@ In der ersten Gruppe befinden sich 3 `.csv` Dateien mit den orignalen Quelldaten
 - `Kohorte.csv` inkl. alle Patienten mit den Pflichtdatenfelder(patient_id, birth_date, gender, patient_zip) Und Informationen über den Besuch des Patienten im Krankenhaus - Aufnahmedatum, ICD, Rang (Haupt-/Nebendiagnose) und verschiedene damit zusammenhängende Merkmale (intravenous lyse therapy (IVT) , Admission to the ICU, Admission to the stroke unit, Neurosurgery, Thrombectomy, Intrakraniell Stent)  und Kardiovaskuläre Risikofaktoren und metabolische Komorbiditäten
 - `Medication.csv` inkl. alle Resourcen bzgl. Patientenaufnahmen (encouter_id) und die erhaltene Medikation (code)
 - `Observations.csv` inkl. patient_id und encounter_id sowie LOINC-Codes (value & unit)
-
+### Summary
 Analog dazu befinden sich in der zweiten Gruppe die zusammengefasste/aggregierte Count-Daten der obigen Tabellen: 
 - `Cohort_Summary.csv` gruppiert für die Quartale (z.B. 2020/Q1, ...)
 - `Medication_Summary.csv` Anzahl der Fälle gruppierte nach Medikationstyp  
@@ -86,3 +86,45 @@ Analog dazu befinden sich in der zweiten Gruppe die zusammengefasste/aggregierte
 - `StrokeDiagnosis_Summary.csv` Anzahl der Fälle gruppierte entsprechend der verfügbaren Stroke diagnosen ICD
 
 Diese sind benötigt um die möglichste größte und feature-reicshte homogene Kohrote über alle Standorten hinweg für die statistische Auswertung selektieren zu können. 
+
+## Verwendete Codesysteme
+  Dieses System wird für den Download per FHIR Search verwendet
+- http://fhir.de/CodeSystem/dimdi/icd-10-gm für Condition.code.coding.system
+- http://fhir.de/CodeSystem/dimdi/ops für Procedure.code.coding.system
+- http://loinc.org für Observation.code.coding.system
+- http://fhir.de/CodeSystem/dimdi/atc für Medication.code.coding.system
+
+
+## Verwendete Profile/Datenelemente
+The queries are written based on the MII profiles for the corresponding resources. The scripts are compatible with the latest release of the available major versions. The following describes, for each resource type used, which elements are used for the FHIR search query to the server (these elements must be present to avoid throwing an error) and which elements are extracted in the script and written to the results tables.
+
+### Modul Person: Patient
+Profil: https://www.medizininformatik-initiative.de/fhir/core/modul-person/StructureDefinition/Patient
+
+Version: 2.0.0-alpha3 bzw. 1.0.14
+
+Für Servabfrage verwendete Elemente:
+
+keine
+Extrahierte Elemente:
+
+* Patient.id
+* Patient.gender
+* Patient.birthDate
+* Patient.address.postalCode
+
+### Modul Fall: Encounter
+Profil: https://www.medizininformatik-initiative.de/fhir/core/modul-fall/StructureDefinition/KontaktGesundheitseinrichtung
+
+Version: 1.0.1
+
+Extrahierte Elemente:
+
+* Encounter.id
+* Encounter.subject.reference
+* Encounter.period.start
+* Encounter.diagnosis.condition.reference
+* Encounter.diagnosis.rank
+* Encounter.hospitalization.dischargeDisposition.coding.code
+
+
