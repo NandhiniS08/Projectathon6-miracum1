@@ -17,7 +17,6 @@ if(file.exists("config.yml")){
   conf <- config::get(file = "config_default.yml")
 }
 
-#If needed disable peer verification
 if(!(conf$ssl_verify_peer)){httr::set_config(httr::config(ssl_verifypeer = 0L))}
 
 brackets = c("[", "]")
@@ -28,7 +27,7 @@ sep = " || "
 encounter_request <- fhir_url(url = conf$serverbase, 
                               resource = "Encounter", 
                               parameters = c("date" = "ge2015-01-01",
-                                             "_has:Condition:encounter:code"="I60.0,I60.1,I60.2,I60.3,I60.4,I60.5,I60.6,I60.7,I60.8,I60.9,I61.0,I61.1,I61.2,I61.3,I61.4,I61.5,I61.6,I61.8,I61.9,I63.0,I63.1,I63.2,I63.3,I63.4,I63.5,I63.6,I63.8,I63.9,I67.80!",
+                                             "diagnosis.code"="I60.0,I60.1,I60.2,I60.3,I60.4,I60.5,I60.6,I60.7,I60.8,I60.9,I61.0,I61.1,I61.2,I61.3,I61.4,I61.5,I61.6,I61.8,I61.9,I63.0,I63.1,I63.2,I63.3,I63.4,I63.5,I63.6,I63.8,I63.9,I67.80!",
                                              "_include" = "Encounter:patient",
                                              "_revinclude"="Condition:encounter",
                                              "_revinclude"="Procedure:encounter",
@@ -317,19 +316,19 @@ df.medstatement <- medstat_table$medstat
 if(nrow(df.medstatement)>0){
   #process Medication statement  resources
   df.medstatement <- fhir_rm_indices(df.medstatement, brackets = brackets )
-  df.medstatement$encounter_id <-vsub("Encounter/", "", df.medstatement$encounter_id)
-  df.medstatement$patient_id <-vsub("Patient/", "", df.medstatement$patient_id) 
-  df.medstatement$medication_id <-vsub("Medication/", "", df.medstatement$medication_id) 
+  df.medstatement$encounter_id <-sub("Encounter/", "", df.medstatement$encounter_id)
+  df.medstatement$patient_id <-sub("Patient/", "", df.medstatement$patient_id) 
+  df.medstatement$medication_id <-sub("Medication/", "", df.medstatement$medication_id) 
   
   
   
   ###extract the actual medication using the IDs
   medication_ids <- unique(df.medstatement$medication_id)
   
-  
+  ids= paste(medication_ids, collapse = ",")
   med_request <- fhir_url(url = conf$serverbase,
                           resource = "Medication",
-                          parameters = c("_id" = unique(df.medstatement$medication_id))
+                          parameters = c("_id" = ids)
                           )
   
   med_bundle <- fhir_search(med_request,
