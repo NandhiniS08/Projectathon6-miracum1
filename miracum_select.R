@@ -17,7 +17,8 @@ if(file.exists("config.yml")){
   conf <- config::get(file = "config_default.yml")
 }
 
-
+#If needed disable peer verification
+if(!(conf$ssl_verify_peer)){httr::set_config(httr::config(ssl_verifypeer = 0L))}
 
 brackets = c("[", "]")
 sep = " || "
@@ -397,7 +398,7 @@ condition_list  <- lapply(list, function(x){
 
 
 condition_bundles <- fhircrackr:::fhir_bundle_list(unlist(condition_list, recursive = F))
-fhir_save(bundles = observation_bundles, directory = "Bundles/conditions")
+#fhir_save(bundles = observation_bundles, directory = "Bundles/conditions")
 
 condition <- fhir_table_description(resource = "Condition",
                                     cols = c(condition_id = "id",
