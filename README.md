@@ -207,7 +207,7 @@ Im Prinzip läuft das Drehbuch wie folgt ab:
  
  4. Die Liste der **Encounter-** und **Patienten-IDs** wird aus den extrahierten Ressourcen extrahiert und wird für das Herunterladen weiterer Ressourcen wie **Observation** und **Medikation** verwendet.
  
- 5. Die **Observation** Ressources werden für die Liste der **Encounter-IDs** und **LOINC-Codes** heruntergeladen, die im Folgenden aufgeführt sind: 777-3,6301-6,3173-2,2160-0,2089-1,2085-9,7799-0,4548-4,2345-7,2093-3,74201-5
+ 5. Die **Observation** Ressources werden für die Liste der **Encounter-IDs** und **LOINC-Codes** heruntergeladen, die im Folgenden aufgeführt sind:
  
         Request: [base]Observation?encounter=xx&code=777-3,6301-6,3173-2,2160-0,2089-1,2085-9,7799-0,4548-4,2345-7,2093-3,74201-5
         *Note: xx indicates a placeholder for list of encounter ids*
