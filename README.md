@@ -96,7 +96,10 @@ Diese sind benötigt um die möglichste größte und feature-reicshte homogene K
 
 
 ## Verwendete Profile/Datenelemente
-The queries are written based on the MII profiles for the corresponding resources. The scripts are compatible with the latest release of the available major versions. The following describes, for each resource type used, which elements are used for the FHIR search query to the server (these elements must be present to avoid throwing an error) and which elements are extracted in the script and written to the results tables.
+Die Abfragen werden auf der Grundlage der MII-Profile für die entsprechenden Ressourcen geschrieben. Die Skripte sind mit der neuesten Version der verfügbaren Hauptversionen kompatibel. Im Folgenden wird für jeden verwendeten Ressourcentyp beschrieben, welche Elemente für die FHIR-Suchanfrage an den Server verwendet werden (diese Elemente müssen vorhanden sein, damit kein Fehler ausgelöst wird) und welche Elemente im Skript extrahiert und in die Ergebnistabellen geschrieben werden.
+
+<!--- [ENG] The queries are written based on the MII profiles for the corresponding resources. The scripts are compatible with the latest release of the available major versions. The following describes, for each resource type used, which elements are used for the FHIR search query to the server (these elements must be present to avoid throwing an error) and which elements are extracted in the script and written to the results tables.
+--->
 
 ### Modul Person: Patient
 Profil: https://www.medizininformatik-initiative.de/fhir/core/modul-person/StructureDefinition/Patient
@@ -104,8 +107,6 @@ Profil: https://www.medizininformatik-initiative.de/fhir/core/modul-person/Struc
 Version: 2.0.0-alpha3 bzw. 1.0.14
 
 Für Servabfrage verwendete Elemente:
-
-keine
 Extrahierte Elemente:
 
 * Patient.id
@@ -192,25 +193,25 @@ Extrahierte Elemente:
 
 
 ## Konzeptioneller Ablauf der Abfrage
-In principle, the script proceeds as follows:
-1. It connects to the FHIR server to download all encounter resources who has the below mentioned stroke diagnosis from the period of 2016-01-01 to current date.
-   ICD10: I60.0,I60.1,I60.2,I60.3,I60.4,I60.5,I60.6,I60.7,I60.8,I60.9,I61.0,I61.1,I61.2,I61.3,I61.4,I61.5,I61.6,I61.8,I61.9,
+Im Prinzip läuft das Drehbuch wie folgt ab:
+ 1. Es verbindet sich mit dem FHIR-Server, um alle **Encounter-**Ressourcen herunterzuladen, die die unten genannten Schlaganfalldiagnosen aus dem Zeitraum vom 2016-01-01 bis zum aktuellen Datum haben.
+ICD10: I60.0,I60.1,I60.2,I60.3,I60.4,I60.5,I60.6,I60.7,I60.8,I60.9,I61.0,I61.1,I61.2,I61.3,I61.4,I61.5,I61.6,I61.8,I61.9,
           I63.0,I63.1,I63.2,I63.3,I63.4,I63.5,I63.6,I63.8,I63.9,I67.80!
-2. It also downloads all the referenced Patient, condition and procedure resources by the obtained encounter resources. i.e. it downloads all the patient,condition and procedures where the encounters obtained in step is also downloaded.
+ 2. Es lädt auch alle referenzierten **Patienten-**, **Condition-** und **Procedure**-Ressourcen durch die erhaltenen **Encounter**-Ressourcen herunter bei bei denen die in *Schritt 1.* **Encounters** erhaltenen worden sind.
  Request:   [base]/Encounter?date=ge2015-01-01&_has:Condition:encounter:code=I60.0,I60.1,I60.2,I60.3,I60.4,I60.5,I60.6,I60.7,I60.8,I60.9,I61.0,I61.1,I61.2,I61.3,I61.4,I61.5,I61.6,I61.8,I61.9,I63.0,I63.1,I63.2,I63.3,I63.4,I63.5,I63.6,I63.8,I63.9,I67.80!&_include=Encounter:patient&_revinclude=Condition:encounter&_revinclude=Procedure:encounter&_parameter_count=500
- 3. After these resources are downloaded, necessary processing is done using FHIRCrackR package and converted into dataframe with relevant features for the encounters with relevant diagnosis.
- 4. The list of encounter and patient ids are extracted from the extracted resources and this is used for downloading further resources such as observation and medication.
- 5. The observation resource is downloaded for the list of encounter ids and LOINC code taht are listed below
+ 3. Nachdem diese Ressourcen heruntergeladen wurden, wird die notwendige Verarbeitung mit dem `FHIRCrackR` Paket durchgeführt und in einen Datenframe mit relevanten Merkmalen für die Encounter mit der entsprechenden Diagnose umgewandelt.
+ 4. Die Liste der **Encounter-** und **Patienten-IDs** wird aus den extrahierten Ressourcen extrahiert und wird für das Herunterladen weiterer Ressourcen wie **Observation** und **Medikation** verwendet.
+ 5. die Observation Ressource wird für die Liste der Encounter-IDs und LOINC-Codes heruntergeladen, die im Folgenden aufgeführt sind:
       777-3,6301-6,3173-2,2160-0,2089-1,2085-9,7799-0,4548-4,2345-7,2093-3,74201-5
       Request: [base]Observation?encounter=xx&code=777-3,6301-6,3173-2,2160-0,2089-1,2085-9,7799-0,4548-4,2345-7,2093-3,74201-5
       xx indicates list of encounter ids
- 6. The medicationStatement resources are downloaded for the list of encounters from which the relevant medication id is obtained, which is then used to extract the actual medication resources
-       Request: [Base]/Medication?id=xx 
+ 6. Das **medicationStatement** werden für die Liste der **Encounters** heruntergeladen, aus der die relevante **Medikamenten-ID** gewonnen wird, die dann zur Extraktion der eigentlichen **Medikamenten-**Ressourcen verwendet wird
+        Request: [Base]/Medication?id=xx 
         xx indicates list of medication ids
- 8.  Inorder to obtain the past comorbidities related to cardiovasular risk and metabollic risks, condition resource is extracted for the list of patient and relevant features are created based on the ICD10 codes.
+ 8.  Um die früheren Komorbiditäten im Zusammenhang mit dem kardiovaskulären Risiko und den metabolischen Risiken zu erhalten, wird die **Condition-**Ressource für die Liste der Patienten extrahiert und die relevanten Merkmale werden auf der Grundlage der ICD10-Codes erstellt.
     Request: [Base]/Condition?subject=xx  
     xx indicates list of patient ids
- 9.  Once all these resources are downloaded, various dataframes are created in R for the whole data and also different summaries that arre saved as csv. The details about the same are mentioned in the output section above 
+ 9.  Wann alle diese Ressourcen heruntergeladen worden sind, werden in R verschiedene Data-Frames für die gesamten aggregierten Daten und auch verschiedene *Summaries** erstellt, und als `.csv` gespeichert werden. Die Einzelheiten dazu sind im obigen Abschnitt über die Ausgabe aufgeführt. 
          
 
 
