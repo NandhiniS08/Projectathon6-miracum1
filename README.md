@@ -216,7 +216,7 @@ Im Prinzip läuft das Drehbuch wie folgt ab:
    6. Die **Procedure-** Ressources werden für die Liste der **Patient-IDS** heruntergeladen, die im Folgenden aufgeführt sind. Die **Procedue-** Ressources werden basierend des **Aufnahme-** und **Entlassdatums** zusätzlich gematcht.
  
         Request: [base]Procedure?subject=xx
-        *Note: xx indicates a placeholder for list of patient ids*    
+        *Note: xx indicates a placeholder for list of patient ids*  
         
         
  7. Das **medicationStatement** wird für die Liste der **Encounters** heruntergeladen, aus der die relevante **Medikamenten-ID** gewonnen wird, die dann zur Extraktion der eigentlichen **Medikamenten-**Ressourcen verwendet wird:
