@@ -225,7 +225,7 @@ Im Prinzip läuft das Drehbuch wie folgt ab:
 8. Um die früheren Komorbiditäten im Zusammenhang mit dem kardiovaskulären Risiko und den metabolischen Risiken zu erhalten, wird die **Condition**-Ressource für die Liste der Patienten extrahiert und die relevanten Merkmale werden auf der Grundlage der ICD10-Codes erstellt.
 
         Request: [Base]/Condition?subject=xx        
-        *Note: xx indicates a placeholder for list of encounter ids*
+        *Note: xx indicates a placeholder for list of patient ids*
 
  9. Wann alle diese Ressourcen heruntergeladen worden sind, werden in R verschiedene Data-Frames für die gesamten aggregierten Daten und auch verschiedene *Summaries* erstellt, und als `.csv` gespeichert werden. Die Einzelheiten dazu sind im obigen Abschnitt über die Ausgabe aufgeführt. 
          
