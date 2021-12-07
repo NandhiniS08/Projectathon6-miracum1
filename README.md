@@ -207,22 +207,29 @@ Im Prinzip läuft das Drehbuch wie folgt ab:
  
  4. Die Liste der **Encounter-** und **Patienten-IDs** wird aus den extrahierten Ressourcen extrahiert und wird für das Herunterladen weiterer Ressourcen wie **Observation** und **Medikation** verwendet.
  
- 5. Die **Observation-** Ressources werden für die Liste der **Encounter-IDs** und **LOINC-Codes** heruntergeladen, die im Folgenden aufgeführt sind. Die **Observation-** Ressources werden basierend des **Aufnahme-** und **Entlassdatums** zusätzlich gematcht.
+ 5. Die **Observation-** Ressources werden für die Liste der **Patient-IDS** und **LOINC-Codes** heruntergeladen, die im Folgenden aufgeführt sind. Die **Observation-** Ressources werden basierend des **Aufnahme-** und **Entlassdatums** zusätzlich gematcht.
  
         Request: [base]Observation?subject=xx&code=777-3,6301-6,3173-2,2160-0,2089-1,2085-9,7799-0,4548-4,2345-7,2093-3,74201-5
         *Note: xx indicates a placeholder for list of patient ids*
-      
- 6. Das **medicationStatement** wird für die Liste der **Encounters** heruntergeladen, aus der die relevante **Medikamenten-ID** gewonnen wird, die dann zur Extraktion der eigentlichen **Medikamenten-**Ressourcen verwendet wird:
+        
+       
+   6. Die **Procedure-** Ressources werden für die Liste der **Patient-IDS** heruntergeladen, die im Folgenden aufgeführt sind. Die **Procedue-** Ressources werden basierend des **Aufnahme-** und **Entlassdatums** zusätzlich gematcht.
+ 
+        Request: [base]Procedure?subject=xx
+        *Note: xx indicates a placeholder for list of patient ids*    
+        
+        
+ 7. Das **medicationStatement** wird für die Liste der **Encounters** heruntergeladen, aus der die relevante **Medikamenten-ID** gewonnen wird, die dann zur Extraktion der eigentlichen **Medikamenten-**Ressourcen verwendet wird:
 
         Request: [Base]/Medication?id=xx
         *Note: xx indicates a placeholder for list of encounter ids*
         
- 7. Um die früheren Komorbiditäten im Zusammenhang mit dem kardiovaskulären Risiko und den metabolischen Risiken zu erhalten, wird die **Condition**-Ressource für die Liste der Patienten extrahiert und die relevanten Merkmale werden auf der Grundlage der ICD10-Codes erstellt.
+8. Um die früheren Komorbiditäten im Zusammenhang mit dem kardiovaskulären Risiko und den metabolischen Risiken zu erhalten, wird die **Condition**-Ressource für die Liste der Patienten extrahiert und die relevanten Merkmale werden auf der Grundlage der ICD10-Codes erstellt.
 
         Request: [Base]/Condition?subject=xx        
         *Note: xx indicates a placeholder for list of encounter ids*
 
- 8. Wann alle diese Ressourcen heruntergeladen worden sind, werden in R verschiedene Data-Frames für die gesamten aggregierten Daten und auch verschiedene *Summaries* erstellt, und als `.csv` gespeichert werden. Die Einzelheiten dazu sind im obigen Abschnitt über die Ausgabe aufgeführt. 
+ 9. Wann alle diese Ressourcen heruntergeladen worden sind, werden in R verschiedene Data-Frames für die gesamten aggregierten Daten und auch verschiedene *Summaries* erstellt, und als `.csv` gespeichert werden. Die Einzelheiten dazu sind im obigen Abschnitt über die Ausgabe aufgeführt. 
          
 
 
