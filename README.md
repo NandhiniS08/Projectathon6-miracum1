@@ -207,18 +207,16 @@ Im Prinzip läuft das Drehbuch wie folgt ab:
  
  4. Die Liste der **Encounter-** und **Patienten-IDs** wird aus den extrahierten Ressourcen extrahiert und wird für das Herunterladen weiterer Ressourcen wie **Observation** und **Medikation** verwendet.
  
- 5. Die **Observation-** Ressources werden für die Liste der **Patient-IDS** und **LOINC-Codes** heruntergeladen, die im Folgenden aufgeführt sind. Die **Observation-** Ressources werden basierend des **Aufnahme-** und **Entlassdatums** zusätzlich gematcht.
+ 5. Die **Observation-** Ressources werden für die Liste der **Patient-IDS** und **LOINC-Codes** heruntergeladen. Zusätzlich werden die **Observation-** Ressources basierend auf das **Aufnahme-** und **Entlassdatum** miteinander gematcht.
  
         Request: [base]Observation?subject=xx&code=777-3,6301-6,3173-2,2160-0,2089-1,2085-9,7799-0,4548-4,2345-7,2093-3,74201-5
         *Note: xx indicates a placeholder for list of patient ids*
-        
-       
-   6. Die **Procedure-** Ressources werden für die Liste der **Patient-IDS** heruntergeladen, die im Folgenden aufgeführt sind. Die **Procedue-** Ressources werden basierend des **Aufnahme-** und **Entlassdatums** zusätzlich gematcht.
+               
+6. Ähnlich werden die **Procedure-** Ressources für die Liste der **Patient-IDS** heruntergeladen und basierend auf das **Aufnahme-** und **Entlassdatum** zusätzlich gematcht.
  
         Request: [base]Procedure?subject=xx
         *Note: xx indicates a placeholder for list of patient ids*  
-        
-        
+              
  7. Das **medicationStatement** wird für die Liste der **Encounters** heruntergeladen, aus der die relevante **Medikamenten-ID** gewonnen wird, die dann zur Extraktion der eigentlichen **Medikamenten-**Ressourcen verwendet wird:
 
         Request: [Base]/Medication?id=xx
